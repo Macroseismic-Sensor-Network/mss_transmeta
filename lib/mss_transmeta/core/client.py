@@ -119,7 +119,7 @@ class TransMetaClient(easyseedlink.EasySeedLinkClient):
 
         export_stream.merge()
         export_stream.split()
-        self.logger.info(export_stream.__str__(extended = True))
+        self.logger.debug(export_stream.__str__(extended = True))
         flush_mode = True
 
         cur_start = min([x.stats.starttime for x in export_stream])
@@ -136,7 +136,7 @@ class TransMetaClient(easyseedlink.EasySeedLinkClient):
         except NotImplementedError:
             self.logger.exception("Error when writing the miniseed file with masked data. Clearing the stream and #going on.")
         except ValueError:
-            self.logger.debug("Not enough data to write a miniseed record.")
+            self.logger.info("Not enough data to write a miniseed record.")
             os.remove(cur_filepath)
 
         #for cur_trace in export_stream:
