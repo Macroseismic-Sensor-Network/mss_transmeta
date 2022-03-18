@@ -125,7 +125,7 @@ class TransMetaClient(easyseedlink.EasySeedLinkClient):
             self.stream = obspy.Stream()
 
         export_stream.merge()
-        export_stream.split()
+        export_stream = export_stream.split()
         self.logger.debug(export_stream.__str__(extended = True))
         flush_mode = True
 
