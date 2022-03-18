@@ -46,12 +46,19 @@ def cli(config_file):
                                                           log_level = config['log']['loglevel'],
                                                           max_bytes = config['log']['max_bytes'],
                                                           backup_count = config['log']['backup_count'])
-    logger.addHandler(handler)
 
     # Remove the stream log handler.
     logger.info('Successfully configured the logging to file. Removing the stream handler.')
     logger.info('All log entries are now written to %s.', log_filepath)
     logger.removeHandler(stream_handler)
+
+    # Add the log file handler.
+    logger.addHandler(handler)
+    
+    # Reissue the starting log entry to the file handler.
+    logger.info("Started msstm.")
+    logger.info("Configuration loaded from %s.", config_file)
+
 
     project = msstm_project.Project(**config)
 
@@ -73,8 +80,9 @@ def cli(config_file):
 
     logger.info("Started the client thread.")
 
+    save_interval = project.process_config['save_interval']
     kwargs = {'callback': client.save_data,
-              'interval': 10,
+              'interval': save_interval,
               'logger': logger,
               'stop_event': stop_event}
     timer_thread = threading.Thread(target = msstm_util.task_timer,
