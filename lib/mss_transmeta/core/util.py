@@ -142,6 +142,8 @@ def load_configuration(filename):
     config['database']['database_name'] = parser.get('database', 'database_name').strip()
     config['process'] = {}
     config['process']['stations'] = json.loads(parser.get('process', 'stations'))
+    config['process']['save_interval'] = int(parser.get('process', 'save_interval'))
+    config['process']['clean_interval'] = int(parser.get('process', 'clean_interval'))
 
     return config
 

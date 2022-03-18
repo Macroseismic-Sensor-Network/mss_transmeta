@@ -26,6 +26,7 @@
 import logging
 import os
 import threading
+import time
 
 import obspy
 import obspy.clients.seedlink.easyseedlink as easyseedlink
@@ -61,6 +62,9 @@ class TransMetaClient(easyseedlink.EasySeedLinkClient):
 
         # The directory where to save the incoming data.
         self.data_dir = self.project.config['output']['data_dir']
+
+        # The interval used to remove old files in the data directory.
+        self.clean_interval = self.project.process_config['clean_interval']
 
         # The incoming data.
         self.stream = obspy.Stream()
@@ -112,6 +116,9 @@ class TransMetaClient(easyseedlink.EasySeedLinkClient):
     def save_data(self):
         ''' Save the data to miniseed files.
         '''
+        self.logger.info("Cleaning the data folder.")
+        self.clean_data_folder()
+        
         self.logger.info("Saving the data.")
         with self.stream_lock:
             export_stream = self.stream.copy()
@@ -122,6 +129,10 @@ class TransMetaClient(easyseedlink.EasySeedLinkClient):
         self.logger.debug(export_stream.__str__(extended = True))
         flush_mode = True
 
+        if len(export_stream) == 0:
+            self.logger.info("No data to export.")
+            return
+        
         cur_start = min([x.stats.starttime for x in export_stream])
         cur_end = max([x.stats.endtime for x in export_stream])
         cur_filename = 'msstm_mseed_export' + '_' + cur_start.isoformat().replace(':','') + '_' + cur_end.isoformat().replace(':', '') + '.msd'
@@ -139,24 +150,20 @@ class TransMetaClient(easyseedlink.EasySeedLinkClient):
             self.logger.info("Not enough data to write a miniseed record.")
             os.remove(cur_filepath)
 
-        #for cur_trace in export_stream:
-        #    cur_filename = cur_trace.id.replace('.', '_') + '_' + cur_trace.stats.starttime.isoformat().replace(':','') + '.msd'
-        #    cur_filepath = os.path.join(self.data_dir,
-        #                                cur_filename)
-        #    try:
-        #        export_trace = cur_trace.copy()
-        #        export_trace.write(cur_filepath,
-        #                           format = "MSEED",
-        #                           reclen = 512,
-        #                           encoding = 'STEIM2',
-        #                           flush = flush_mode)
-        #    except NotImplementedError:
-        #        self.logger.exception("Error when writing the miniseed file with masked data. Clearing the stream and #going on.")
-        #        continue
-        #    except ValueError:
-        #        self.logger.debug("Not enough data to write a miniseed record.")
-        #        os.remove(cur_filepath)
-        #        continue
+
+    def clean_data_folder(self):
+        ''' Remove old files from the export data folder.
+        '''
+        now = time.time()
+        # Process the data_dir folders.
+        data_dir = self.data_dir
+        file_list = os.listdir(data_dir)
+        file_list = [os.path.join(data_dir, x) for x in file_list]
+        file_list = [x for x in file_list if os.path.isfile(x)]
+        for cur_file in sorted(file_list):
+            cur_stat = os.stat(cur_file)
+            if cur_stat.st_mtime <= (now - self.clean_interval):
+                os.remove(cur_file)
 
 
     def get_recorder_mappings(self, station_nsl = None):
