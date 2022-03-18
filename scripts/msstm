@@ -1,0 +1,70 @@
+#!/usr/bin/env python3
+
+import logging
+import os
+import threading
+
+import click
+
+import mss_transmeta.core.client as msstm_client
+import mss_transmeta.core.project as msstm_project
+import mss_transmeta.core.util as msstm_util
+
+
+@click.command()
+@click.argument('config_file')
+def cli(config_file):
+    ''' The command line interface entry point.
+
+    '''
+    # Create the logger instance.
+    logger_name = 'mss_transmeta'
+    logger = logging.getLogger(logger_name)
+    # Set the common log level to debug. The log level is refined
+    # for each handler.
+    logger.setLevel('DEBUG')
+
+    # Create a logger logging to stdout. Used for output of warnings
+    # and errors.
+    handler = msstm_util.get_logger_stream_handler(log_level = 'INFO')
+    logger.addHandler(handler)
+
+    logger.info("Starting msstm.")
+
+    # Load the config file.
+    if not os.path.exists(config_file):
+        print('ERROR: Configuration file not found: %s.', config_file)
+        raise click.Abort()
+    config = msstm_util.load_configuration(config_file)
+    project = msstm_project.Project(**config)
+
+    project.connect_to_db()
+    project.load_inventory()
+
+    # Some threading control instances.
+    stop_event = threading.Event()
+    
+    # Create the Seedlink client.
+    host = config['seedlink']['host']
+    port = config['seedlink']['port']
+    server_url = host + ':' + str(port)
+    client = msstm_client.TransMetaClient(project = project,
+                                          server_url = server_url)
+    client.seedlink_connect()
+    client_thread = threading.Thread(target = client.run)
+    client_thread.start()
+
+    logger.info("Started the client thread.")
+
+    kwargs = {'callback': client.save_data,
+              'interval': 10,
+              'logger': logger,
+              'stop_event': stop_event}
+    timer_thread = threading.Thread(target = msstm_util.task_timer,
+                                    kwargs = kwargs)
+    timer_thread.start()
+    logger.info("Started the timer_thread.")
+
+
+if __name__ == '__main__':
+    cli()
