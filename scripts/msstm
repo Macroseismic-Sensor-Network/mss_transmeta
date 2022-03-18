@@ -26,16 +26,33 @@ def cli(config_file):
 
     # Create a logger logging to stdout. Used for output of warnings
     # and errors.
-    handler = msstm_util.get_logger_stream_handler(log_level = 'INFO')
-    logger.addHandler(handler)
+    stream_handler = msstm_util.get_logger_stream_handler(log_level = 'INFO')
+    logger.addHandler(stream_handler)
 
     logger.info("Starting msstm.")
 
     # Load the config file.
     if not os.path.exists(config_file):
-        print('ERROR: Configuration file not found: %s.', config_file)
+        logger.error('Configuration file not found: %s.', config_file)
         raise click.Abort()
     config = msstm_util.load_configuration(config_file)
+
+    # Create the log file handler.
+    log_dir = config['log']['log_dir']
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
+    log_filepath = os.path.join(log_dir, 'msstm.log')
+    handler = msstm_util.get_logger_rotating_file_handler(filename = log_filepath,
+                                                          log_level = config['log']['loglevel'],
+                                                          max_bytes = config['log']['max_bytes'],
+                                                          backup_count = config['log']['backup_count'])
+    logger.addHandler(handler)
+
+    # Remove the stream log handler.
+    logger.info('Successfully configured the logging to file. Removing the stream handler.')
+    logger.info('All log entries are now written to %s.', log_filepath)
+    logger.removeHandler(stream_handler)
+
     project = msstm_project.Project(**config)
 
     project.connect_to_db()
@@ -43,7 +60,7 @@ def cli(config_file):
 
     # Some threading control instances.
     stop_event = threading.Event()
-    
+   
     # Create the Seedlink client.
     host = config['seedlink']['host']
     port = config['seedlink']['port']

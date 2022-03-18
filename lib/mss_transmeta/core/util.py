@@ -29,6 +29,7 @@
 import configparser
 import json
 import logging
+import logging.handlers
 import os
 import re
 import time
@@ -45,6 +46,49 @@ def get_logger_stream_handler(log_level = 'WARNING'):
         The logging filehandler.
     '''
     ch = logging.StreamHandler()
+    ch.setLevel(log_level)
+    formatter = logging.Formatter("#LOG# - %(asctime)s - %(process)d - %(levelname)s - %(name)s: %(message)s")
+    ch.setFormatter(formatter)
+    return ch
+
+
+def get_logger_rotating_file_handler(filename = None,
+                                     log_level = 'INFO',
+                                     max_bytes = 1000,
+                                     backup_count = 3):
+    ''' Create a logging rotating file handler.
+
+    Create a logging RotatingFileHandler and ad a Formatter to it.
+
+    Parameters
+    ----------
+    filename: str
+        The full path of the log file.
+
+    log_level: str
+        The logging log level.
+        ['DEBUG', 'INFO', 'WARNING', 'ERROR']
+
+    max_bytes: int
+        The maximum filesize of the log file [bytes].
+        If the file grows larger than this value, a new
+        file is created.
+
+    backup_count: int
+       The number of rotating files to use.
+
+
+    Returns
+    -------
+    ch: logging.handlers.RotatingFileHandler
+        The logging filehandler.
+    '''
+    if not filename:
+        return
+
+    ch = logging.handlers.RotatingFileHandler(filename = filename,
+                                              maxBytes = max_bytes,
+                                              backupCount = backup_count)
     ch.setLevel(log_level)
     formatter = logging.Formatter("#LOG# - %(asctime)s - %(process)d - %(levelname)s - %(name)s: %(message)s")
     ch.setFormatter(formatter)
