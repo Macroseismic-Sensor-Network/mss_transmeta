@@ -66,6 +66,9 @@ class TransMetaClient(easyseedlink.EasySeedLinkClient):
         # The interval used to remove old files in the data directory.
         self.clean_interval = self.project.process_config['clean_interval']
 
+        # The public network code.
+        self.network_code = 'XX'
+
         # The incoming data.
         self.stream = obspy.Stream()
 
@@ -92,7 +95,7 @@ class TransMetaClient(easyseedlink.EasySeedLinkClient):
         self.logger.debug('Received trace:')
         self.logger.debug(str(trace))
         cur_nslc = self.recorder_map[tuple(trace.id.split('.'))]
-        trace.stats.network = cur_nslc[0]
+        trace.stats.network = self.network_code
         trace.stats.station = cur_nslc[1]
         trace.stats.location = cur_nslc[2]
         trace.stats.channel = cur_nslc[3]
@@ -202,7 +205,7 @@ class TransMetaClient(easyseedlink.EasySeedLinkClient):
                 stream_tb = cur_channel.get_stream(start_time = obspy.UTCDateTime())
                 cur_loc = stream_tb[0].item.name.split(':')[0]
                 cur_chan = stream_tb[0].item.name.split(':')[1]
-
+                
                 cur_key = ('XX',
                            stream_tb[0].item.serial,
                            cur_loc,
