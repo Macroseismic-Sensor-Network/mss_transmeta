@@ -69,6 +69,11 @@ class TransMetaClient(easyseedlink.EasySeedLinkClient):
         # The public network code.
         self.network_code = 'XX'
 
+        # The channel name translation.
+        self.channel_map = {'Z': 'EPZ',
+                            'Hnormal': 'EP2',
+                            'Hparallel': 'EP3'}
+
         # The incoming data.
         self.stream = obspy.Stream()
 
@@ -98,7 +103,7 @@ class TransMetaClient(easyseedlink.EasySeedLinkClient):
         trace.stats.network = self.network_code
         trace.stats.station = cur_nslc[1]
         trace.stats.location = cur_nslc[2]
-        trace.stats.channel = cur_nslc[3]
+        trace.stats.channel = self.channel_map[cur_nslc[3]]
         self.logger.debug('Changed metadata:')
         self.logger.debug(str(trace))
         with self.stream_lock:
