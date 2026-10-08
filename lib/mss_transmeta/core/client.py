@@ -60,6 +60,10 @@ class TransMetaClient(easyseedlink.EasySeedLinkClient):
         if len(self.project.process_config['stations']) > 0:
             self.stations = self.project.process_config['stations']
 
+        self.non_db_stations = None
+        if len(self.project.process_config['non_db_stations']) > 0:
+            self.non_db_stations = self.project.process_config['non_db_stations']
+            
         # The directory where to save the incoming data.
         self.data_dir = self.project.config['output']['data_dir']
 
@@ -82,6 +86,10 @@ class TransMetaClient(easyseedlink.EasySeedLinkClient):
 
         # Get the recorder mappings.
         self.recorder_map = self.get_recorder_mappings(station_nsl = self.stations)
+
+        # Get the recorder mappings of the non-db stations.
+        non_db_recorder_map = self.get_non_db_recorder_mappings(station_nsl = self.non_db_stations)
+        self.recorder_map.update(non_db_recorder_map)
 
 
     @property
@@ -216,6 +224,34 @@ class TransMetaClient(easyseedlink.EasySeedLinkClient):
                            cur_loc,
                            cur_chan)
                 recorder_map[cur_key] = cur_channel.nslc
+
+        self.logger.debug(recorder_map)
+        return recorder_map
+
+    
+    def get_non_db_recorder_mappings(self, station_nslc = None):
+        ''' Get the mappings of the requested NSLC.
+
+        Parameters
+        ----------
+        station_nsl: :obj:`list` of :obj:`str`
+            The station NSL codes to process. If None, all available stations
+            in the inventory are processed.
+
+        Returns
+        -------
+        :obj:`dict`
+            The matching NSLC codes of the MSS units relating their
+            serial numbers to the actual station locations.
+        '''
+        recorder_map = {}
+
+        for cur_net, cur_stat_code, cur_location, cur_channel in station_nslc:            
+            cur_key = ('XX',
+                       cur_stat_code,
+                       cur_location,
+                       cur_channel)
+            recorder_map[cur_key] = cur_key
 
         self.logger.debug(recorder_map)
         return recorder_map
