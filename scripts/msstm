@@ -37,6 +37,14 @@ def cli(config_file):
         raise click.Abort()
     config = msstm_util.load_configuration(config_file)
 
+    # Load the Geosphere seedlink client configuration.
+    geosphere_config_file = config['process']['geosphere_config_file']
+    if not os.path.exists(geosphere_config_file):
+        logger.error('Configuration file not found: %s.', geosphere_config_file)
+        raise click.Abort()
+    geosphere_config = msstm_util.load_configuration(geosphere_config_file)
+    config['process']['ignore_geosphere_serials'] = list(geosphere_config['serial_map'].values())
+
     # Create the log file handler.
     log_dir = config['log']['log_dir']
     if not os.path.exists(log_dir):
