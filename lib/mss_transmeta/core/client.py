@@ -88,7 +88,7 @@ class TransMetaClient(easyseedlink.EasySeedLinkClient):
         self.recorder_map = self.get_recorder_mappings(station_nsl = self.stations)
 
         # Get the recorder mappings of the non-db stations.
-        non_db_recorder_map = self.get_non_db_recorder_mappings(station_nsl = self.non_db_stations)
+        non_db_recorder_map = self.get_non_db_recorder_mappings(station_nslc = self.non_db_stations)
         self.recorder_map.update(non_db_recorder_map)
 
 
