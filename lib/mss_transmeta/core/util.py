@@ -145,9 +145,22 @@ def load_configuration(filename):
     config['process']['non_db_stations'] = json.loads(parser.get('process', 'non_db_stations'))
     config['process']['save_interval'] = int(parser.get('process', 'save_interval'))
     config['process']['clean_interval'] = int(parser.get('process', 'clean_interval'))
+    config['process']['geosphere_config_file'] = parser.get('process', 'geosphere_config_file').strip()
 
     return config
 
+
+def load_geosphere_seedlink_configuration(filename):
+    if not os.path.exists(filename):
+        raise RuntimeError("The configuration filename {filename} doesn't exist.".format(filename = filename))
+    parser = configparser.ConfigParser()
+    parser.read(filename)
+
+    config = {}
+    config['serial_map'] = json.loads(parser.get('process', 'serial_map'))
+
+    return config
+    
 
 def task_timer(callback, interval, logger, stop_event):
     ''' A timer executing a task at regular intervals.

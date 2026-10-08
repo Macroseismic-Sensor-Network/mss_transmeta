@@ -63,6 +63,8 @@ class TransMetaClient(easyseedlink.EasySeedLinkClient):
         self.non_db_stations = None
         if len(self.project.process_config['non_db_stations']) > 0:
             self.non_db_stations = self.project.process_config['non_db_stations']
+
+        self.ignore_serials = self.project.process_config['ignore_geosphere_serials']
             
         # The directory where to save the incoming data.
         self.data_dir = self.project.config['output']['data_dir']
@@ -218,6 +220,14 @@ class TransMetaClient(easyseedlink.EasySeedLinkClient):
         for station in station_list:
             for cur_channel in station.channels:
                 stream_tb = cur_channel.get_stream(start_time = obspy.UTCDateTime())
+
+                if stream_tb[0].item.serial in self.ignore_serials:
+                    self.logger.warning("Ignoring stream %s:%s for %s.",
+                                        stream_tb[0].item.serial,
+                                        stream_tb[0].item.name,
+                                        cur_channel.nslc)
+                    continue
+                
                 cur_loc = stream_tb[0].item.name.split(':')[0]
                 cur_chan = stream_tb[0].item.name.split(':')[1]
                 
@@ -248,7 +258,14 @@ class TransMetaClient(easyseedlink.EasySeedLinkClient):
         '''
         recorder_map = {}
 
-        for cur_net, cur_stat_code, cur_location, cur_channel in station_nslc:          
+        for cur_net, cur_stat_code, cur_location, cur_channel in station_nslc:
+            if cur_stat_code in self.ignore_serials:
+                self.logger.warning("Ignoring stream %s.%s.%s.%s.", cur_net,
+                                    cur_stat_code,
+                                    cur_location,
+                                    cur_channel)
+                continue
+                
             cur_key = ('XX',
                        cur_stat_code,
                        cur_location,
