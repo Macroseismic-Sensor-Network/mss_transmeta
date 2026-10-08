@@ -222,9 +222,10 @@ class TransMetaClient(easyseedlink.EasySeedLinkClient):
                 stream_tb = cur_channel.get_stream(start_time = obspy.UTCDateTime())
 
                 if stream_tb[0].item.serial in self.ignore_serials:
-                    self.logger.warning("Ignoring stream %s:%s.",
+                    self.logger.warning("Ignoring stream %s:%s for %s.",
                                         stream_tb[0].item.serial,
-                                        stream_tb[0].item.name)
+                                        stream_tb[0].item.name,
+                                        cur_channel.nslc)
                     continue
                 
                 cur_loc = stream_tb[0].item.name.split(':')[0]
