@@ -64,7 +64,7 @@ class TransMetaClient(easyseedlink.EasySeedLinkClient):
         if len(self.project.process_config['non_db_stations']) > 0:
             self.non_db_stations = self.project.process_config['non_db_stations']
 
-        self.ignore_serials = self.project.process_config['ingore_geoshpere_serials']
+        self.ignore_serials = self.project.process_config['ignore_geoshpere_serials']
             
         # The directory where to save the incoming data.
         self.data_dir = self.project.config['output']['data_dir']
