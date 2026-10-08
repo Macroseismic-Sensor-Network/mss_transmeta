@@ -111,7 +111,9 @@ class TransMetaClient(easyseedlink.EasySeedLinkClient):
         trace.stats.network = self.network_code
         trace.stats.station = cur_nslc[1]
         trace.stats.location = cur_nslc[2]
-        trace.stats.channel = self.channel_map[cur_nslc[3]]
+        if cur_nslc[3] in self.channel_map.keys():
+            trace.stats.channel = self.channel_map[cur_nslc[3]]
+            
         self.logger.debug('Changed metadata:')
         self.logger.debug(str(trace))
         with self.stream_lock:
@@ -246,7 +248,7 @@ class TransMetaClient(easyseedlink.EasySeedLinkClient):
         '''
         recorder_map = {}
 
-        for cur_net, cur_stat_code, cur_location, cur_channel in station_nslc:            
+        for cur_net, cur_stat_code, cur_location, cur_channel in station_nslc:          
             cur_key = ('XX',
                        cur_stat_code,
                        cur_location,
