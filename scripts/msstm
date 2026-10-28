@@ -68,10 +68,11 @@ def cli(config_file):
     logger.info("Configuration loaded from %s.", config_file)
 
 
+    #project = None
     project = msstm_project.Project(**config)
 
-    project.connect_to_db()
-    project.load_inventory()
+    #project.connect_to_db()
+    #project.load_inventory()
 
     # Some threading control instances.
     stop_event = threading.Event()

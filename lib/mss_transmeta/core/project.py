@@ -29,12 +29,12 @@
 import logging
 import os
 
-import sqlalchemy
-import sqlalchemy.ext.declarative
-import sqlalchemy.orm
+#import sqlalchemy
+#import sqlalchemy.ext.declarative
+#import sqlalchemy.orm
 
-import mss_dataserver.geometry as mssds_geometry
-import mss_dataserver.geometry.db_inventory
+#import mss_dataserver.geometry as mssds_geometry
+#import mss_dataserver.geometry.db_inventory
 
 
 class Project(object):
@@ -149,77 +149,3 @@ class Project(object):
 
         # The geometry inventory.
         self.db_inventory = None
-
-
-    @property
-    def inventory(self):
-        ''' The geometry inventory.
-        '''
-        return self.db_inventory
-
-
-    def connect_to_db(self):
-        ''' Connect to the database.
-
-        Connect to the database using the parameters specified in 
-        the configuration file.
-        '''
-        try:
-            if self.db_driver is not None:
-                dialect_string = self.db_dialect + "+" + self.db_driver
-            else:
-                dialect_string = self.db_dialect
-
-            if self.db_pwd is not None:
-                engine_string = dialect_string + "://" + self.db_username + ":" + self.db_pwd + "@" + self.db_host + "/" + self.db_database_name
-            else:
-                engine_string = dialect_string + "://" + self.db_username + "@" + self.db_host + "/" + self.db_database_name
-
-            engine_string = engine_string + "?charset=utf8"
-
-            self.db_engine = sqlalchemy.create_engine(engine_string)
-            self.db_engine.echo = False
-            self.db_metadata = sqlalchemy.MetaData(self.db_engine)
-            self.db_base = sqlalchemy.ext.declarative.declarative_base(metadata = self.db_metadata)
-            self.db_session_class = sqlalchemy.orm.sessionmaker(bind = self.db_engine)
-        except Exception:
-            logging.exception("Can't connect to the database.")
-
-        if self.db_base is not None:
-            self.load_database_table_structure()
-        else:
-            self.logger.error("The db_metadata is empty. There seems to be no connection to the database.")
-
-
-    def load_database_table_structure(self):
-        ''' Load the required database tables from the modules.
-        '''
-        geom_tables = mssds_geometry.databaseFactory(self.db_base)
-        for cur_table in geom_tables:
-            cur_name = cur_table.__table__.name
-            self.db_tables[cur_name] = cur_table
-
-
-    def get_db_session(self):
-        ''' Create a sqlAlchemy database session.
-
-        Returns
-        -------
-        session : :class:`orm.session.Session`
-            A sqlAlchemy database session.
-        '''
-        return self.db_session_class()
-
-
-    def load_inventory(self):
-        ''' Load the geometry inventory.
-
-        Load the geometry inventory from the database.
-        '''
-        # Load the existing inventory from the database.
-        try:
-            self.db_inventory = mssds_geometry.db_inventory.DbInventory(project = self)
-            self.db_inventory.load()
-        except Exception:
-            self.logger.exception("Error while loading the database inventory.")
-

@@ -147,6 +147,13 @@ def load_configuration(filename):
     config['process']['clean_interval'] = int(parser.get('process', 'clean_interval'))
     config['process']['geosphere_config_file'] = parser.get('process', 'geosphere_config_file').strip()
 
+    # Convert the recorder_map array into a dictionary:
+    recorder_map_dict = {}
+    recorder_map_array = json.loads(parser.get('process', 'recorder_map'))
+    for cur_key, cur_value in recorder_map_array:
+        recorder_map_dict[tuple(cur_key)] = tuple(cur_value)
+    config['process']['recorder_map'] = recorder_map_dict
+        
     return config
 
 

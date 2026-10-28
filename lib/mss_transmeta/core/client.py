@@ -87,21 +87,24 @@ class TransMetaClient(easyseedlink.EasySeedLinkClient):
         self.stream_lock = threading.Lock()
 
         # Get the recorder mappings.
-        self.recorder_map = self.get_recorder_mappings(station_nsl = self.stations)
+        if len(self.project.process_config['recorder_map']) > 0:
+            self.recorder_map = {}
+            for cur_key, cur_value in self.project.process_config['recorder_map'].items():
+                if cur_key[1] in self.ignore_serials:
+                    self.logger.info("Ignoring %s, %s.", cur_key, cur_value)
+                    continue
+                
+                self.recorder_map[cur_key] = cur_value
+        else:
+            self.recorder_map = self.get_recorder_mappings(station_nsl = self.stations)
 
         # Get the recorder mappings of the non-db stations.
         non_db_recorder_map = self.get_non_db_recorder_mappings(station_nslc = self.non_db_stations)
         self.recorder_map.update(non_db_recorder_map)
 
+        # seedlinkclient connection timeout
+        self.conn.timeout = 10
 
-    @property
-    def inventory(self):
-        ''' The geometry inventory.
-        '''
-        if self.project:
-            return self.project.inventory
-        else:
-            return None
         
 
     def on_data(self, trace):
