@@ -165,6 +165,7 @@ def load_geosphere_seedlink_configuration(filename):
 
     config = {}
     config['serial_map'] = json.loads(parser.get('process', 'serial_map'))
+    config['stations_file'] = parser.get('process', 'stations_file')
 
     return config
     

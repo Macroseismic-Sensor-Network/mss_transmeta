@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import json
 import logging
 import os
 import threading
@@ -43,7 +44,22 @@ def cli(config_file):
         logger.error('Configuration file not found: %s.', geosphere_config_file)
         raise click.Abort()
     geosphere_config = msstm_util.load_geosphere_seedlink_configuration(geosphere_config_file)
-    config['process']['ignore_geosphere_serials'] = list(geosphere_config['serial_map'].values())
+    stations_file = geosphere_config['stations_file']
+    with open(stations_file, 'r') as in_file:
+        geosphere_stations = json.load(in_file)
+
+    #geosphere_serial_map = list(geosphere_config['serial_map'].values())
+    geosphere_serial_map = geosphere_config['serial_map']
+    ignore_geosphere_serials = []
+    for cur_nslc in geosphere_stations:
+        cur_station_name = cur_nslc[1]
+        if cur_station_name in geosphere_serial_map.keys():
+            ignore_geosphere_serials.append(geosphere_serial_map[cur_station_name])
+
+    ignore_geosphere_serials = sorted(list(set(ignore_geosphere_serials)))
+    #config['process']['ignore_geosphere_serials'] = list(geosphere_config['serial_map'].values())
+    config['process']['ignore_geosphere_serials'] = ignore_geosphere_serials
+
 
     # Create the log file handler.
     log_dir = config['log']['log_dir']
@@ -66,6 +82,8 @@ def cli(config_file):
     # Reissue the starting log entry to the file handler.
     logger.info("Started msstm.")
     logger.info("Configuration loaded from %s.", config_file)
+    logger.info('geosphere_stations: %s', geosphere_stations)
+    logger.info('ignore_geosphere_serials: %s', ignore_geosphere_serials)
 
 
     #project = None
